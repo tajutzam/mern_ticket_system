@@ -17,10 +17,25 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password wajib diisi"],
       minlength: 6,
     },
+    role: {
+      type: String,
+      enum: ["Helpdesk", "NOC", "Technical", "Customer"],
+      required: [true, "Role wajib ditentukan"],
+    },
+    // Khusus untuk role 'Technical' (Langkah 8: Cek Availability)
+    availabilityStatus: {
+      type: String,
+      enum: ["Available", "Busy"],
+      default: "Available",
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "Nomor WhatsApp/Telepon wajib diisi untuk notifikasi"],
+    }
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 module.exports = mongoose.model("User", userSchema);

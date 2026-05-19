@@ -3,10 +3,8 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middlewares/errorMiddleware');
 
-// Load environment variables
 dotenv.config();
 
-// Konek ke Database
 connectDB();
 
 const app = express();
