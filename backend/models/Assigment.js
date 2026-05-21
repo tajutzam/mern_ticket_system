@@ -12,16 +12,14 @@ const assignmentSchema = new mongoose.Schema(
       ref: "User", 
       required: [true, "Petugas NOC pendelegat wajib dicatat."],
     },
-    // Mengubah 'technician' menjadi 'technicianId' agar lurus dengan payload frontend
     technicianId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", 
       required: [true, "Teknisi lapangan wajib ditentukan."],
     },
-    // Menambahkan status internal lembar tugas teknisi
     status: {
       type: String,
-      enum: ["Pending", "Accepted", "In Progress", "Completed", "Canceled"],
+      enum: ["Pending", "Accepted", "In Progress", "Completed", "Canceled", "On Site", "Resolved"],
       default: "Pending",
     },
     priority: {

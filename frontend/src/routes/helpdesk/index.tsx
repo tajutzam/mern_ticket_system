@@ -14,11 +14,9 @@ export const Route = createFileRoute("/helpdesk/")({
 });
 
 function HelpdeskDashboard() {
-  // 1. Ambil data kalkulasi dashboard terpusat dari endpoint khusus backend
   const { data: statsRes, isLoading: isStatsLoading, isError: isStatsError, error: statsError } = useDashboardStats();
   
-  // 2. Tetap ambil data tiket umum murni untuk keperluan list tabel terkini (Recent Tickets)
-  const { data: ticketsRes, isLoading: isTicketsLoading } = useTickets();
+  const { data: ticketsRes, isLoading: isTicketsLoading } = useTickets(1, 8);
 
   const stats = statsRes?.data;
   const tickets = ticketsRes?.data || [];
@@ -51,7 +49,6 @@ function HelpdeskDashboard() {
     );
   }
 
-  // Siapkan data komposisi untuk Donut Chart dari summary data backend
   const statusData = [
     { name: "Open", value: stats.summary.open, color: "#36a7e3" },
     { name: "In Progress", value: stats.summary.inProgress, color: "#e8ae0c" },
@@ -73,17 +70,14 @@ function HelpdeskDashboard() {
       />
       
       <div className="p-8 space-y-6">
-        {/* TOP STAT BLOCK METRICS */}
         <div className="grid md:grid-cols-3 gap-4">
           <Stat label="Open" value={stats.summary.open} icon={<Inbox className="h-5 w-5" />} tone="info" />
           <Stat label="In Progress" value={stats.summary.inProgress} icon={<ArrowRight className="h-5 w-5" />} tone="warning" />
           <Stat label="Closed / Resolved" value={stats.summary.closed} icon={<CheckCircle2 className="h-5 w-5" />} tone="success" />
         </div>
 
-        {/* GRAFIK ANALISIS ROW */}
         <div className="grid lg:grid-cols-3 gap-6">
           
-          {/* MULTI-STACKED TIMEFRAME AREA CHART (Lebar 2/3) */}
           <Card className="lg:col-span-2 p-6 border border-neutral-200/80 shadow-md rounded-xl bg-white flex flex-col justify-between">
             <div className="mb-6">
               <h3 className="font-bold text-neutral-900 text-sm uppercase tracking-wider flex items-center gap-2">
@@ -153,7 +147,6 @@ function HelpdeskDashboard() {
             </div>
           </Card>
 
-          {/* COMPOSITION STATUS DONUT CHART (Lebar 1/3) */}
           <Card className="p-6 border border-neutral-200/80 shadow-md rounded-xl bg-white flex flex-col justify-between">
             <div className="mb-4">
               <h3 className="font-bold text-neutral-900 text-sm uppercase tracking-wider flex items-center gap-2">
@@ -205,7 +198,6 @@ function HelpdeskDashboard() {
           </Card>
         </div>
 
-        {/* RECENT TICKETS ROW TABLE */}
         <Card className="overflow-hidden border border-neutral-200/80 shadow-md rounded-xl bg-white">
           <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
             <h2 className="font-bold text-neutral-900 text-sm uppercase tracking-wider">Recent Tickets (8 Terkini)</h2>
@@ -213,7 +205,7 @@ function HelpdeskDashboard() {
               Lihat semua
             </Link>
           </div>
-          <TicketTable tickets={tickets.slice(0, 8)} />
+          <TicketTable tickets={tickets} />
         </Card>
       </div>
     </AppLayout>

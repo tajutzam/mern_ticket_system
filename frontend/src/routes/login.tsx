@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Radio, Lock, Mail } from "lucide-react";
+import { Lock, Mail, Loader2, Zap } from "lucide-react";
 import { useLoginMutation } from "@/hooks/api/useAuthMutations";
-
 
 export const Route = createFileRoute("/login")({
   component: Login,
   head: () => ({
     meta: [
-      { title: "Login — SIPATEN" },
+      { title: "Login — SIPATEN Workstation" },
       { name: "description", content: "Masuk ke Sistem Penanganan Tiket SIPATEN" },
     ],
   }),
@@ -35,7 +34,7 @@ function Login() {
       { email, password },
       {
         onSuccess: (response) => {
-          // Ambil role dari response dan ubah ke lowercase agar sesuai dengan state client ('helpdesk' | 'noc' | 'technical')
+          // Ambil role dari response dan ubah ke lowercase agar sesuai dengan state client
           const backendRole = response.user.role.toLowerCase() as Role;
           
           // Simpan role ke sipaten-store global state
@@ -49,102 +48,121 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#fafafa] text-neutral-900 flex flex-col md:flex-row font-sans antialiased relative overflow-hidden">
       
-      {/* PANEL KIRI: BRANDING IDENTITY */}
+      {/* BACKGROUND GRAPHIC EFFECTS (AURORA THEME) */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#eef0f2_1px,transparent_1px),linear-gradient(to_bottom,#eef0f2_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-60 z-0" />
       <div 
-        className="relative md:w-[45%] bg-gradient-to-b from-neutral-900 via-neutral-950 to-neutral-900 p-8 md:p-12 flex flex-col justify-between text-white border-b md:border-b-0 md:border-r border-neutral-800 overflow-hidden"
-      >
-        <div 
-          className="absolute -right-10 top-10 h-72 w-72 rounded-full blur-[120px] opacity-20 pointer-events-none"
-          style={{ backgroundColor: "#36a7e3" }}
-        />
-        <div 
-          className="absolute -left-10 bottom-10 h-72 w-72 rounded-full blur-[120px] opacity-15 pointer-events-none"
-          style={{ backgroundColor: "#e8ae0c" }}
-        />
+        className="absolute inset-0 opacity-[0.08] pointer-events-none z-0"
+        style={{
+          background: "radial-gradient(circle at 20% 30%, #36a7e3 0%, transparent 50%), radial-gradient(circle at 80% 70%, #e8ae0c 0%, transparent 50%)",
+        }}
+      />
+      
+      {/* PANEL KIRI: BRANDING IDENTITY (LIGHT DESIGN) */}
+      <div className="relative md:w-[45%] p-8 md:p-16 flex flex-col justify-between border-b md:border-b-0 md:border-r border-neutral-200/60 bg-white/60 backdrop-blur-sm z-10">
         
-        <div className="flex items-center gap-2.5 relative z-10">
-          <div className="h-9 w-9 rounded-lg bg-neutral-800 border border-neutral-700 grid place-items-center shadow-sm">
-            <Radio className="h-5 w-5 animate-pulse" style={{ color: "#e8ae0c" }} />
+        {/* BRAND IDENTITY WITH LOGO.PNG */}
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 overflow-hidden flex items-center justify-center rounded-lg select-none shrink-0">
+            <img 
+              src="/logo.png" 
+              alt="Logo SIPATEN" 
+              className="h-full w-auto object-contain"
+            />
           </div>
           <div>
-            <span className="font-extrabold tracking-wider text-sm block">SIPATEN</span>
-            <span className="text-[10px] text-neutral-400 uppercase tracking-widest block -mt-1">Ticketing Engine</span>
+            <span className="font-black text-sm tracking-tight text-neutral-900 block">SIPATEN</span>
+            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block mt-1">Telecom Workspace</span>
           </div>
         </div>
 
-        <div className="my-auto pt-12 pb-8 relative z-10 max-w-sm">
-          <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
-            Satu Pintu untuk Seluruh Penanganan Kendala.
+        <div className="my-auto pt-16 md:pt-0 max-w-sm space-y-5">
+         
+          <h1 className="text-3xl font-black tracking-tight leading-[1.15] text-neutral-900 uppercase">
+            Satu Pintu Workspace Operasional.
           </h1>
-          <p className="mt-3 text-sm text-neutral-400 leading-relaxed font-medium">
-            Sistem monitoring terpusat yang menghubungkan petugas operasional secara real-time demi meminimalisir waktu *downtime* jaringan.
+          <p className="text-xs md:text-sm text-neutral-400 font-medium leading-relaxed">
+            Sistem monitoring terpusat yang menghubungkan petugas lapangan, helpdesk, dan unit NOC secara real-time demi meminimalisir waktu pemulihan link infrastruktur.
           </p>
         </div>
 
-        <div className="text-xs text-neutral-500 font-medium relative z-10">
-          &copy; 2026 SIPATEN Ecosystem. All rights reserved.
+        {/* SYSTEM STATUS FOOTER */}
+        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-8 md:mt-0">
+          &copy; 2026 SIPATEN Ecosystem &bull; Secure Node Environment
         </div>
       </div>
 
-      {/* PANEL KANAN: FORM LOGIN */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-neutral-50">
-        <div className="w-full max-w-[400px] space-y-6">
+      {/* PANEL KANAN: FORM LOGIN (CLEAN MINIMALIST CONTAINER) */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 z-10">
+        <div className="w-full max-w-[380px] space-y-6">
           
-          <div className="space-y-1 text-center md:text-left">
-            <h2 className="text-2xl font-bold tracking-tight">Selamat Datang</h2>
-            <p className="text-sm text-neutral-500 font-medium">
-              Silakan masuk menggunakan akun kredensial petugas Anda.
+          {/* HEADER TEKS FORM */}
+          <div className="space-y-1.5 text-center md:text-left">
+            <h2 className="text-xs font-black text-neutral-400 uppercase tracking-widest">Operator Portal</h2>
+            <h3 className="text-xl font-black text-neutral-900 uppercase tracking-tight">Selamat Datang</h3>
+            <p className="text-xs text-neutral-400 font-medium">
+              Silakan validasi identifikasi kredensial penugasan Anda.
             </p>
           </div>
 
-          <Card className="p-6 bg-white border border-neutral-200/80 shadow-md rounded-xl">
+          {/* KARTU FORMULIR */}
+          <Card className="p-6 bg-white border border-neutral-200/80 shadow-xl rounded-2xl relative overflow-hidden">
+            {/* Top Indicator Accent Gradient bar */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#36a7e3] to-[#e8ae0c]" />
+            
             <form onSubmit={handleLogin} className="space-y-4">
+              
+              {/* FIELD INPUT EMAIL */}
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-bold text-neutral-700">Email Kerja</Label>
+                <Label htmlFor="email" className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Email Kerja</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="nama@perusahaan.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9 bg-neutral-50/50 border-neutral-200"
+                    className="pl-9 bg-neutral-50/50 border-neutral-200 focus-visible:ring-neutral-950 text-xs font-semibold h-10 rounded-xl"
                     required
                     disabled={isPending}
                   />
                 </div>
               </div>
 
+              {/* FIELD INPUT PASSWORD */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-xs font-bold text-neutral-700">Password</Label>
-                </div>
+                <Label htmlFor="password" className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Password Kunci</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9 bg-neutral-50/50 border-neutral-200"
+                    className="pl-9 bg-neutral-50/50 border-neutral-200 focus-visible:ring-neutral-950 text-xs font-semibold h-10 rounded-xl"
                     required
                     disabled={isPending}
                   />
                 </div>
               </div>
 
-              {/* Tombol aksi login yang responsif terhadap status loading API */}
+              {/* BUTTON SUBMIT DENGAN INDIKATOR LOADING */}
               <Button 
                 type="submit" 
-                className="w-full text-white font-semibold shadow-sm hover:opacity-90 transition-opacity mt-2"
-                style={{ backgroundColor: "#36a7e3" }}
+                className="w-full bg-[#36a7e3] hover:bg-[#2b8cc0] text-white text-xs font-black uppercase tracking-wider h-10 rounded-xl shadow-md mt-2 flex items-center justify-center gap-1.5"
                 disabled={isPending}
               >
-                {isPending ? "Memverifikasi..." : "Masuk ke Sistem"}
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Memverifikasi Hak Akses...
+                  </>
+                ) : (
+                  "Masuk Ke Workstation"
+                )}
               </Button>
             </form>
           </Card>

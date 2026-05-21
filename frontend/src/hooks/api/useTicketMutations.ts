@@ -12,11 +12,12 @@ import {
   fetchDashboardStats,
 } from "@/api/ticket";
 
-export const useTickets = () => {
+export const useTickets = (page = 1, limit = 10) => {
   return useQuery({
-    queryKey: ["tickets"],
-    queryFn: fetchAllTickets,
+    queryKey: ["tickets", page, limit],
+    queryFn: () => fetchAllTickets(page, limit),
     staleTime: 1000 * 30,
+    placeholderData: (previousData) => previousData, 
   });
 };
 

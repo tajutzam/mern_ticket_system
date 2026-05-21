@@ -31,10 +31,28 @@ export interface CreateTicketInput {
   category: string;
 }
 
-export const fetchAllTickets = async (): Promise<{ status: string; results: number; data: Ticket[] }> => {
-  const response = await api.get("/tickets");
+
+export interface PaginationMetadata {
+  totalResults: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface TicketsResponse {
+  status: string;
+  results: number;
+  pagination: PaginationMetadata;
+  data: Ticket[];
+}
+
+export const fetchAllTickets = async (page = 1, limit = 10): Promise<TicketsResponse> => {
+  const response = await api.get(`/tickets?page=${page}&limit=${limit}`);
   return response.data;
 };
+
 
 export const fetchTicketById = async (id: string): Promise<{ status: string; data: Ticket }> => {
   const response = await api.get(`/tickets/${id}`);

@@ -182,14 +182,37 @@ exports.updateTicket = async (req, res) => {
 
 exports.getAllTickets = async (req, res) => {
   try {
+    // 1. Ambil nilai page dan limit dari query, konversi ke tipe data Angka
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    
+    // Hitung jumlah data yang harus dilewati (offset)
+    const skip = (page - 1) * limit;
+
+    // 2. Hitung total seluruh dokumen tiket di database untuk metadata
+    const totalTickets = await Ticket.countDocuments();
+    const totalPages = Math.ceil(totalTickets / limit);
+
+    // 3. Ambil data secara segmented menggunakan skip dan limit
     const tickets = await Ticket.find()
       .populate("createdBy", "name email role")
       .populate("resolvedBy", "name email role")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
+    // 4. Kembalikan response lengkap dengan metadata pagination
     res.status(200).json({
       status: "success",
       results: tickets.length,
+      pagination: {
+        totalResults: totalTickets,
+        totalPages: totalPages,
+        currentPage: page,
+        limit: limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      },
       data: tickets,
     });
   } catch (error) {
