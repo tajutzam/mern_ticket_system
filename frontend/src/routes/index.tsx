@@ -1,7 +1,11 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useSipaten, type Role } from "@/lib/sipaten-store";
 import { Card } from "@/components/ui/card";
-import { Headphones, Activity, Wrench, Radio, ArrowRight, Layers } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Headphones, Activity, Wrench, Radio, ArrowRight, Layers, Search, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -55,12 +59,27 @@ const roles: {
 ];
 
 function Index() {
-  const { setRole } = useSipaten();
   const router = useRouter();
+  const [searchId, setSearchId] = useState("");
+
+  const handleTrackTicket = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const cleanId = searchId.trim().replace("#", "");
+    
+    if (!cleanId) {
+      toast.error("Silakan masukkan ID Tiket terlebih dahulu");
+      return;
+    }
+
+    // Arahkan ke rute tracking publik (e.g., /tracker/SPT-12345)
+    router.navigate({ to: `/tracker/${cleanId}` });
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 flex flex-col justify-between">
       
+      {/* HERO SECTION */}
       <div 
         className="relative overflow-hidden py-20 px-8 text-white border-b border-neutral-200"
         style={{
@@ -92,16 +111,37 @@ function Index() {
           <p className="mt-4 max-w-2xl text-base text-neutral-400 font-medium">
             Satu platform terpadu menggunakan skema alur <span style={{ color: "#36a7e3" }} className="font-semibold">Helpdesk</span>, <span style={{ color: "#e8ae0c" }} className="font-semibold">NOC</span>, dan <span style={{ color: "#36a7e3" }} className="font-semibold">Technical</span> demi resolusi jaringan yang cepat.
           </p>
+
+          {/* PANEL AMBIL TRACKING TIKET UNTUK CUSTOMER */}
+          <form 
+            onSubmit={handleTrackTicket}
+            className="mt-10 w-full max-w-md bg-white/5 p-2 rounded-xl border border-white/10 backdrop-blur-sm flex gap-2"
+          >
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+              <Input 
+                type="text"
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value)}
+                placeholder="Masukkan ID Tiket (Contoh: SPT-102)"
+                className="bg-neutral-900/60 border-neutral-700 text-white pl-9 placeholder:text-neutral-500 focus-visible:ring-[#36a7e3]"
+              />
+            </div>
+            <Button type="submit" className="bg-[#36a7e3] text-white hover:bg-[#2b8cbfff] font-bold px-5">
+              Lacak Tiket
+            </Button>
+          </form>
         </div>
       </div>
 
+      {/* PORTAL LOGIN STAFF */}
       <div className="max-w-5xl w-full mx-auto px-8 -mt-12 pb-12 relative flex-1">
         <div className="grid md:grid-cols-3 gap-6">
           {roles.map((r) => (
             <Card
               key={r.id}
               onClick={() => {
-                router.navigate({to : "/login"})
+                router.navigate({ to: "/login" })
               }}
               className={`group p-6 cursor-pointer bg-white border border-neutral-200 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between border-l-4 ${r.borderColor}`}
             >
@@ -121,7 +161,6 @@ function Index() {
                 <span className="group-hover:text-neutral-950 transition-colors">Masuk Dashboard</span>
                 <div 
                   className="h-7 w-7 rounded-full bg-neutral-50 flex items-center justify-center transition-all duration-200"
-                  style={{ '--hover-bg': r.id === 'noc' ? '#e8ae0c' : '#36a7e3' } as React.CSSProperties}
                 >
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
                 </div>
@@ -130,6 +169,7 @@ function Index() {
           ))}
         </div>
 
+        {/* WORKFLOW GUIDE */}
         <div className="mt-16 border border-neutral-200 bg-neutral-100/70 rounded-xl p-8">
           <div className="flex items-center gap-2 mb-6">
             <Layers className="h-4 w-4 text-neutral-500" />

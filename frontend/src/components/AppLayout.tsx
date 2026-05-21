@@ -1,8 +1,8 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { type Role, useSipaten } from "@/lib/sipaten-store";
 import { Button } from "@/components/ui/button";
-// Import hook useCurrentUser yang sudah kita buat sebelumnya
 import { useCurrentUser } from "@/hooks/api/useAuthMutations";
+import { useEffect } from "react"; 
 import {
   LayoutDashboard,
   PlusCircle,
@@ -12,6 +12,10 @@ import {
   ClipboardList,
   LogOut,
   Radio,
+  User,
+  Shield,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -35,8 +39,8 @@ const navByRole: Record<
 
 const roleLabel: Record<Role, string> = {
   helpdesk: "Helpdesk",
-  noc: "NOC",
-  technical: "Technical",
+  noc: "NOC Engineer",
+  technical: "Technician",
 };
 
 export function AppLayout({
@@ -52,55 +56,93 @@ export function AppLayout({
 
   const { data: user, isLoading, isError } = useCurrentUser();
 
+  const userData = user?.user || user;
+
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!isLoading) {
+      if (isError || !user || !token) {
+        console.log("Sesi tidak valid, mengalihkan ke gerbang login...");
+        setRole(null);
+        router.navigate({ to: "/login" });
+      }
+    }
+  }, [user, isLoading, isError, router, setRole]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center text-sm text-muted-foreground">
-        Memuat sesi pengguna...
+      <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center text-sm font-medium text-neutral-500 gap-3">
+        <Loader2 className="h-6 w-6 text-[#36a7e3] animate-spin" />
+        <span>Memverifikasi enkripsi sesi petugas...</span>
       </div>
     );
   }
 
-
   if (isError || !user) {
-    setRole(null);
-    router.navigate({ to: "/" });
     return null;
   }
 
-  // Ambil menu navigasi berdasarkan role yang aktif
   const nav = navByRole[role];
 
+  const avatarInitial = userData?.name ? userData.name.charAt(0).toUpperCase() : "U";
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
-      <aside className="w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col">
-        <div className="px-5 py-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground grid place-items-center font-bold">
-              <Radio className="h-5 w-5" />
+    <div className="min-h-screen bg-neutral-50/50 text-neutral-900 flex">
+
+      <aside className="w-66 border-r border-neutral-200 bg-white text-neutral-900 flex flex-col shrink-0 shadow-sm">
+
+        <div className="px-5 py-5 border-b border-neutral-100 bg-white">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-neutral-900 text-white grid place-items-center font-bold shadow-sm">
+              <Radio className="h-5 w-5 text-neutral-100" />
             </div>
             <div>
-              <div className="font-bold tracking-tight">SIPATEN</div>
-              <div className="text-xs text-muted-foreground">
-                Ticketing System
+              <div className="font-extrabold tracking-tight text-neutral-900 text-sm leading-none">SIPATEN</div>
+              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                Ticketing Workstation
               </div>
             </div>
           </div>
         </div>
 
-        {/* === 4. TAMPILKAN NAMA USER DARI BACKEND === */}
-        <div className="px-5 py-3 border-b border-sidebar-border/50 bg-sidebar-accent/20">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Logged In As
+        <div className="px-4 py-4 mx-3 my-3 bg-neutral-50 border border-neutral-200/60 rounded-xl flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-[#36a7e3] text-white font-extrabold text-sm flex items-center justify-center shadow-inner">
+              {avatarInitial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold text-neutral-400 leading-none">Petugas Aktif</div>
+              <div className="text-sm font-bold text-neutral-900 truncate mt-1" title={userData?.name}>
+                {userData?.name || "Nama Petugas"}
+              </div>
+            </div>
           </div>
-          {/* Menyesuaikan property response backend Anda (misal: user.data.name atau user.name) */}
-          <div className="text-sm font-bold truncate text-primary">{user?.data?.name || user?.name}</div>
-          <div className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider">
-            Role: <span className="font-semibold text-foreground">{roleLabel[role]}</span>
+
+          <div className="space-y-1.5 pt-2 border-t border-neutral-200/60 text-xs text-neutral-600 font-medium">
+            <div className="flex items-center gap-2 truncate" title={userData?.email}>
+              <Mail className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
+              <span className="truncate">{userData?.email || "email@perusahaan.com"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
+              <span className="font-semibold text-neutral-800">{roleLabel[role]}</span>
+            </div>
+
+            {role === "technical" && (
+              <div className="flex items-center gap-2 mt-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] font-bold text-emerald-700">
+                  Status: {userData?.availabilityStatus || "Available"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        <nav className="flex-1 px-3 mt-3 space-y-1">
-          {nav.map((n) => {
+        <nav className="flex-1 px-3 space-y-1">
+          {nav?.map((n) => {
             const active =
               n.to === `/${role}`
                 ? pathname === n.to
@@ -109,36 +151,40 @@ export function AppLayout({
               <Link
                 key={n.to}
                 to={n.to}
-                className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${active
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${active
+                    ? "bg-neutral-900 text-white shadow-md"
+                    : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
                   }`}
               >
-                {n.icon}
+                <span className={active ? "text-white" : "text-neutral-400"}>
+                  {n.icon}
+                </span>
                 {n.label}
               </Link>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-sidebar-border">
+
+        <div className="p-3 border-t border-neutral-100 bg-neutral-50/40">
           <Button
             variant="ghost"
             size="sm"
-            // Mengikuti saved preferences untuk tombol abu-abu
-            className="w-full justify-start text-muted-foreground hover:bg-neutral-200 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-50"
+            className="w-full justify-start font-bold text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900 transition-colors"
             onClick={() => {
-              // Hapus token saat logout agar interceptor tidak mengirim token mati
-              localStorage.removeItem('token');
+              localStorage.removeItem("token");
               setRole(null);
-              router.navigate({ to: "/" });
+              router.navigate({ to: "/login" });
             }}
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            Switch role / Logout
+            <LogOut className="h-4 w-4 mr-2 text-neutral-400" />
+            Logout
           </Button>
         </div>
       </aside>
-      <main className="flex-1 min-w-0">{children}</main>
+
+      <main className="flex-1 min-w-0 flex flex-col overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }
@@ -153,14 +199,14 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="border-b border-border bg-card px-8 py-5 flex items-center justify-between">
+    <div className="border-b border-neutral-200 bg-white px-8 py-5 flex items-center justify-between shadow-sm sticky top-0 z-10">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-neutral-950">{title}</h1>
         {subtitle && (
-          <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+          <p className="text-sm text-neutral-500 mt-0.5 font-medium">{subtitle}</p>
         )}
       </div>
-      {actions}
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
   );
 }

@@ -11,15 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TechnicalIndexRouteImport } from './routes/technical.index'
-import { Route as NocIndexRouteImport } from './routes/noc.index'
-import { Route as HelpdeskIndexRouteImport } from './routes/helpdesk.index'
-import { Route as NocTechniciansRouteImport } from './routes/noc.technicians'
-import { Route as HelpdeskCreateRouteImport } from './routes/helpdesk.create'
-import { Route as HelpdeskMonitoringIndexRouteImport } from './routes/helpdesk.monitoring.index'
-import { Route as TechnicalAssignmentsIdRouteImport } from './routes/technical.assignments.$id'
-import { Route as NocTicketsIdRouteImport } from './routes/noc.tickets.$id'
-import { Route as HelpdeskMonitoringIdRouteImport } from './routes/helpdesk.monitoring.$id'
+import { Route as TechnicalIndexRouteImport } from './routes/technical/index'
+import { Route as NocIndexRouteImport } from './routes/noc/index'
+import { Route as HelpdeskIndexRouteImport } from './routes/helpdesk/index'
+import { Route as TrackerIdRouteImport } from './routes/tracker/$id'
+import { Route as NocTechniciansRouteImport } from './routes/noc/technicians'
+import { Route as HelpdeskCreateRouteImport } from './routes/helpdesk/create'
+import { Route as HelpdeskMonitoringIndexRouteImport } from './routes/helpdesk/monitoring.index'
+import { Route as TechnicalAssignmentsIdRouteImport } from './routes/technical/assignments.$id'
+import { Route as NocTicketsIdRouteImport } from './routes/noc/tickets.$id'
+import { Route as HelpdeskMonitoringIdRouteImport } from './routes/helpdesk/monitoring.$id'
+import { Route as HelpdeskEditIdRouteImport } from './routes/helpdesk/edit.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -44,6 +46,11 @@ const NocIndexRoute = NocIndexRouteImport.update({
 const HelpdeskIndexRoute = HelpdeskIndexRouteImport.update({
   id: '/helpdesk/',
   path: '/helpdesk/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackerIdRoute = TrackerIdRouteImport.update({
+  id: '/tracker/$id',
+  path: '/tracker/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NocTechniciansRoute = NocTechniciansRouteImport.update({
@@ -76,15 +83,22 @@ const HelpdeskMonitoringIdRoute = HelpdeskMonitoringIdRouteImport.update({
   path: '/helpdesk/monitoring/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpdeskEditIdRoute = HelpdeskEditIdRouteImport.update({
+  id: '/helpdesk/edit/$id',
+  path: '/helpdesk/edit/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/helpdesk/create': typeof HelpdeskCreateRoute
   '/noc/technicians': typeof NocTechniciansRoute
+  '/tracker/$id': typeof TrackerIdRoute
   '/helpdesk/': typeof HelpdeskIndexRoute
   '/noc/': typeof NocIndexRoute
   '/technical/': typeof TechnicalIndexRoute
+  '/helpdesk/edit/$id': typeof HelpdeskEditIdRoute
   '/helpdesk/monitoring/$id': typeof HelpdeskMonitoringIdRoute
   '/noc/tickets/$id': typeof NocTicketsIdRoute
   '/technical/assignments/$id': typeof TechnicalAssignmentsIdRoute
@@ -95,9 +109,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/helpdesk/create': typeof HelpdeskCreateRoute
   '/noc/technicians': typeof NocTechniciansRoute
+  '/tracker/$id': typeof TrackerIdRoute
   '/helpdesk': typeof HelpdeskIndexRoute
   '/noc': typeof NocIndexRoute
   '/technical': typeof TechnicalIndexRoute
+  '/helpdesk/edit/$id': typeof HelpdeskEditIdRoute
   '/helpdesk/monitoring/$id': typeof HelpdeskMonitoringIdRoute
   '/noc/tickets/$id': typeof NocTicketsIdRoute
   '/technical/assignments/$id': typeof TechnicalAssignmentsIdRoute
@@ -109,9 +125,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/helpdesk/create': typeof HelpdeskCreateRoute
   '/noc/technicians': typeof NocTechniciansRoute
+  '/tracker/$id': typeof TrackerIdRoute
   '/helpdesk/': typeof HelpdeskIndexRoute
   '/noc/': typeof NocIndexRoute
   '/technical/': typeof TechnicalIndexRoute
+  '/helpdesk/edit/$id': typeof HelpdeskEditIdRoute
   '/helpdesk/monitoring/$id': typeof HelpdeskMonitoringIdRoute
   '/noc/tickets/$id': typeof NocTicketsIdRoute
   '/technical/assignments/$id': typeof TechnicalAssignmentsIdRoute
@@ -124,9 +142,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/helpdesk/create'
     | '/noc/technicians'
+    | '/tracker/$id'
     | '/helpdesk/'
     | '/noc/'
     | '/technical/'
+    | '/helpdesk/edit/$id'
     | '/helpdesk/monitoring/$id'
     | '/noc/tickets/$id'
     | '/technical/assignments/$id'
@@ -137,9 +157,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/helpdesk/create'
     | '/noc/technicians'
+    | '/tracker/$id'
     | '/helpdesk'
     | '/noc'
     | '/technical'
+    | '/helpdesk/edit/$id'
     | '/helpdesk/monitoring/$id'
     | '/noc/tickets/$id'
     | '/technical/assignments/$id'
@@ -150,9 +172,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/helpdesk/create'
     | '/noc/technicians'
+    | '/tracker/$id'
     | '/helpdesk/'
     | '/noc/'
     | '/technical/'
+    | '/helpdesk/edit/$id'
     | '/helpdesk/monitoring/$id'
     | '/noc/tickets/$id'
     | '/technical/assignments/$id'
@@ -164,9 +188,11 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   HelpdeskCreateRoute: typeof HelpdeskCreateRoute
   NocTechniciansRoute: typeof NocTechniciansRoute
+  TrackerIdRoute: typeof TrackerIdRoute
   HelpdeskIndexRoute: typeof HelpdeskIndexRoute
   NocIndexRoute: typeof NocIndexRoute
   TechnicalIndexRoute: typeof TechnicalIndexRoute
+  HelpdeskEditIdRoute: typeof HelpdeskEditIdRoute
   HelpdeskMonitoringIdRoute: typeof HelpdeskMonitoringIdRoute
   NocTicketsIdRoute: typeof NocTicketsIdRoute
   TechnicalAssignmentsIdRoute: typeof TechnicalAssignmentsIdRoute
@@ -208,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/helpdesk'
       fullPath: '/helpdesk/'
       preLoaderRoute: typeof HelpdeskIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tracker/$id': {
+      id: '/tracker/$id'
+      path: '/tracker/$id'
+      fullPath: '/tracker/$id'
+      preLoaderRoute: typeof TrackerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/noc/technicians': {
@@ -252,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HelpdeskMonitoringIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/helpdesk/edit/$id': {
+      id: '/helpdesk/edit/$id'
+      path: '/helpdesk/edit/$id'
+      fullPath: '/helpdesk/edit/$id'
+      preLoaderRoute: typeof HelpdeskEditIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -260,9 +300,11 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   HelpdeskCreateRoute: HelpdeskCreateRoute,
   NocTechniciansRoute: NocTechniciansRoute,
+  TrackerIdRoute: TrackerIdRoute,
   HelpdeskIndexRoute: HelpdeskIndexRoute,
   NocIndexRoute: NocIndexRoute,
   TechnicalIndexRoute: TechnicalIndexRoute,
+  HelpdeskEditIdRoute: HelpdeskEditIdRoute,
   HelpdeskMonitoringIdRoute: HelpdeskMonitoringIdRoute,
   NocTicketsIdRoute: NocTicketsIdRoute,
   TechnicalAssignmentsIdRoute: TechnicalAssignmentsIdRoute,

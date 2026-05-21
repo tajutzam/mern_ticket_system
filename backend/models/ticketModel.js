@@ -5,7 +5,7 @@ const ticketSchema = new mongoose.Schema(
     ticketId: {
       type: String,
       required: true,
-      unique: true, // Contoh: #001
+      unique: true,
     },
     customerName: {
       type: String,
@@ -39,7 +39,7 @@ const ticketSchema = new mongoose.Schema(
     },
     resolvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Menunjuk ke NOC jika selesai via Case A (Remote)
+      ref: "User",
     },
     statusHistory: [
       {

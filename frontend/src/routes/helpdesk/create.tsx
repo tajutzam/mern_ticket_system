@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
-import { useSipaten } from "@/lib/sipaten-store";
+import { useCreateTicketMutation } from "@/hooks/api/useTicketMutations";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/helpdesk/create")({
@@ -31,34 +31,44 @@ const categories = [
 ];
 
 function CreateTicket() {
-  const { createTicket } = useSipaten();
+  const { mutate, isPending } = useCreateTicketMutation();
   const router = useRouter();
+
   const [form, setForm] = useState({
     customerName: "",
-    phone: "",
-    title: "",
+    phoneNumber: "", // Disesuaikan dengan skema database backend (phoneNumber)
+    issueTitle: "",   // Disesuaikan dengan skema database backend (issueTitle)
     description: "",
     category: "Internet Down",
   });
-  const [submitting, setSubmitting] = useState(false);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.customerName || !form.title) {
-      toast.error("Customer name & issue title wajib diisi");
+    
+    if (!form.customerName || !form.issueTitle || !form.phoneNumber) {
+      toast.error("Nama customer, nomor telepon, dan judul masalah wajib diisi");
       return;
     }
-    setSubmitting(true);
-    const t = createTicket(form);
-    toast.success(`Ticket ${t.id} created`, {
-      description: "Status: OPEN — lanjutkan ke confirmation.",
+
+    mutate(form, {
+      onSuccess: (response) => {
+        const newTicket = response.data;
+
+        toast.success(`Ticket ${newTicket.ticketId} Berhasil Dibuat`, {
+          description: "Status: OPEN — Melanjutkan ke halaman konfirmasi.",
+        });
+
+        router.navigate({
+          to: "/helpdesk/monitoring/$id",
+          params: { id: newTicket._id },
+        });
+      },
+      onError: (error: any) => {
+        console.log(error)
+        const errorMessage = error.response?.data?.message || "Gagal membuat ticket baru.";
+        toast.error(errorMessage);
+      }
     });
-    setTimeout(() => {
-      router.navigate({
-        to: "/helpdesk/monitoring/$id",
-        params: { id: t.id.replace("#", "") },
-      });
-    }, 300);
   };
 
   return (
@@ -80,15 +90,17 @@ function CreateTicket() {
                   onChange={(e) =>
                     setForm({ ...form, customerName: e.target.value })
                   }
+                  disabled={isPending}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ph">Phone Number</Label>
                 <Input
                   id="ph"
-                  placeholder="+62 812 3456 7890"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="6281234567890"
+                  value={form.phoneNumber}
+                  onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
+                  disabled={isPending}
                 />
               </div>
             </div>
@@ -97,8 +109,9 @@ function CreateTicket() {
               <Input
                 id="ti"
                 placeholder="Internet Down"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                value={form.issueTitle}
+                onChange={(e) => setForm({ ...form, issueTitle: e.target.value })}
+                disabled={isPending}
               />
             </div>
             <div className="space-y-2">
@@ -106,6 +119,7 @@ function CreateTicket() {
               <Select
                 value={form.category}
                 onValueChange={(v) => setForm({ ...form, category: v })}
+                disabled={isPending}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -129,6 +143,7 @@ function CreateTicket() {
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
                 }
+                disabled={isPending}
               />
             </div>
             <div className="flex gap-2 justify-end pt-2">
@@ -136,11 +151,13 @@ function CreateTicket() {
                 type="button"
                 variant="outline"
                 onClick={() => router.navigate({ to: "/helpdesk" })}
+                disabled={isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting}>
-                Submit Ticket
+              
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Submitting..." : "Submit Ticket"}
               </Button>
             </div>
           </form>

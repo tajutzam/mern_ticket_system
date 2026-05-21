@@ -5,37 +5,51 @@ const assignmentSchema = new mongoose.Schema(
     ticketId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Ticket",
-      required: true,
+      required: [true, "ID Tiket wajib dilampirkan."],
     },
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", 
-      required: true,
+      required: [true, "Petugas NOC pendelegat wajib dicatat."],
     },
-    technician: {
+    // Mengubah 'technician' menjadi 'technicianId' agar lurus dengan payload frontend
+    technicianId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", 
-      required: true,
+      required: [true, "Teknisi lapangan wajib ditentukan."],
+    },
+    // Menambahkan status internal lembar tugas teknisi
+    status: {
+      type: String,
+      enum: ["Pending", "Accepted", "In Progress", "Completed", "Canceled"],
+      default: "Pending",
     },
     priority: {
       type: String,
       enum: ["Low", "Medium", "High", "Critical"],
       default: "Medium",
     },
-    nocNote: {
-      type: String, 
+    // Mengubah 'nocNote' menjadi 'note' agar lurus dengan payload frontend
+    note: {
+      type: String,
+      required: [true, "Instruksi atau catatan dari NOC wajib diisi."],
     },
     progressUpdates: [
       {
-        note: String,
-        statusAtTime: String, 
+        note: { type: String, required: true },
+        statusAtTime: { type: String, required: true }, // Misal: "ON SITE", "IN PROGRESS"
+        updatedBy: { 
+          type: mongoose.Schema.Types.ObjectId, 
+          ref: "User",
+          required: true 
+        },
         updatedAt: { type: Date, default: Date.now },
       }
     ],
     workReport: {
       solution: { type: String },
       finalNote: { type: String },
-      evidenceUrl: { type: String }, 
+      evidenceUrl: { type: String }, // Link foto bukti perbaikan/redaman OPM
       submittedAt: { type: Date },
     },
   },

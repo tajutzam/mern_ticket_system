@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Radio, Lock, Mail} from "lucide-react";
+import { Radio, Lock, Mail } from "lucide-react";
+import { useLoginMutation } from "@/hooks/api/useAuthMutations";
+
 
 export const Route = createFileRoute("/login")({
   component: Login,
@@ -23,31 +25,33 @@ function Login() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { mutate, isPending } = useLoginMutation();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      if (email.includes("noc")) {
-        setRole("noc");
-        router.navigate({ to: "/noc" });
-      } else if (email.includes("tech")) {
-        setRole("technical");
-        router.navigate({ to: "/technical" });
-      } else {
-        setRole("helpdesk");
-        router.navigate({ to: "/helpdesk" });
+    mutate(
+      { email, password },
+      {
+        onSuccess: (response) => {
+          // Ambil role dari response dan ubah ke lowercase agar sesuai dengan state client ('helpdesk' | 'noc' | 'technical')
+          const backendRole = response.user.role.toLowerCase() as Role;
+          
+          // Simpan role ke sipaten-store global state
+          setRole(backendRole);
+          
+          // Arahkan user ke dashboard yang sesuai secara dinamis
+          router.navigate({ to: `/${backendRole}` });
+        },
       }
-    }, 800);
+    );
   };
 
- 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 flex flex-col md:flex-row">
       
+      {/* PANEL KIRI: BRANDING IDENTITY */}
       <div 
         className="relative md:w-[45%] bg-gradient-to-b from-neutral-900 via-neutral-950 to-neutral-900 p-8 md:p-12 flex flex-col justify-between text-white border-b md:border-b-0 md:border-r border-neutral-800 overflow-hidden"
       >
@@ -84,7 +88,7 @@ function Login() {
         </div>
       </div>
 
-      {/* PANEL KANAN: FORM LOGIN & QUICK ACCESS */}
+      {/* PANEL KANAN: FORM LOGIN */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-neutral-50">
         <div className="w-full max-w-[400px] space-y-6">
           
@@ -109,6 +113,7 @@ function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-9 bg-neutral-50/50 border-neutral-200"
                     required
+                    disabled={isPending}
                   />
                 </div>
               </div>
@@ -116,7 +121,6 @@ function Login() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-xs font-bold text-neutral-700">Password</Label>
-                
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
@@ -128,18 +132,19 @@ function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-9 bg-neutral-50/50 border-neutral-200"
                     required
+                    disabled={isPending}
                   />
                 </div>
               </div>
 
-              {/* Tombol Log In menggunakan warna biru pilihan #36a7e3 */}
+              {/* Tombol aksi login yang responsif terhadap status loading API */}
               <Button 
                 type="submit" 
                 className="w-full text-white font-semibold shadow-sm hover:opacity-90 transition-opacity mt-2"
                 style={{ backgroundColor: "#36a7e3" }}
-                disabled={isLoading}
+                disabled={isPending}
               >
-                {isLoading ? "Memverifikasi..." : "Masuk ke Sistem"}
+                {isPending ? "Memverifikasi..." : "Masuk ke Sistem"}
               </Button>
             </form>
           </Card>
