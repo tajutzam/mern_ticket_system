@@ -59,10 +59,8 @@ function Login() {
         }}
       />
       
-      {/* PANEL KIRI: BRANDING IDENTITY (LIGHT DESIGN) */}
       <div className="relative md:w-[45%] p-8 md:p-16 flex flex-col justify-between border-b md:border-b-0 md:border-r border-neutral-200/60 bg-white/60 backdrop-blur-sm z-10">
         
-        {/* BRAND IDENTITY WITH LOGO.PNG */}
         <div className="flex items-center gap-2.5">
           <div className="h-9 w-9 overflow-hidden flex items-center justify-center rounded-lg select-none shrink-0">
             <img 
@@ -87,17 +85,14 @@ function Login() {
           </p>
         </div>
 
-        {/* SYSTEM STATUS FOOTER */}
         <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-8 md:mt-0">
           &copy; 2026 SIPATEN Ecosystem &bull; Secure Node Environment
         </div>
       </div>
 
-      {/* PANEL KANAN: FORM LOGIN (CLEAN MINIMALIST CONTAINER) */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 z-10">
-        <div className="w-full max-w-[380px] space-y-6">
+        <div className="w-full max-w-95 space-y-6">
           
-          {/* HEADER TEKS FORM */}
           <div className="space-y-1.5 text-center md:text-left">
             <h2 className="text-xs font-black text-neutral-400 uppercase tracking-widest">Operator Portal</h2>
             <h3 className="text-xl font-black text-neutral-900 uppercase tracking-tight">Selamat Datang</h3>

@@ -1,6 +1,7 @@
 const Assignment = require("../models/Assigment");
 const Ticket = require("../models/ticketModel");
 const User = require("../models/userModel");
+const WAService = require("../service/waService");
 
 /**
  * @desc    Menerbitkan Surat Penugasan Teknisi Lapangan (Case B oleh NOC)
@@ -16,13 +17,16 @@ const createAssignment = async (req, res, next) => {
     if (!assignedBy) {
       return res.status(401).json({
         success: false,
-        message: "Aksi ditolak. ID Petugas NOC yang bertanggung jawab tidak terdeteksi.",
+        message:
+          "Aksi ditolak. ID Petugas NOC yang bertanggung jawab tidak terdeteksi.",
       });
     }
 
     const ticket = await Ticket.findById(ticketId);
     if (!ticket) {
-      return res.status(404).json({ success: false, message: "Berkas tiket tidak ditemukan." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Berkas tiket tidak ditemukan." });
     }
 
     if (ticket.status !== "CONFIRMED") {
@@ -59,20 +63,20 @@ const createAssignment = async (req, res, next) => {
         {
           note: "Surat tugas dicetak dan didelegasikan oleh Tim NOC pusat.",
           statusAtTime: "ASSIGNED",
-          updatedBy: assignedBy
-        }
+          updatedBy: assignedBy,
+        },
       ],
     });
 
     ticket.status = "ASSIGNED";
-    
+
     // Sinkronisasi riwayat tiket utama
     if (ticket.statusHistory) {
       ticket.statusHistory.push({
         status: "ASSIGNED",
         note: `Tiket didelegasikan kepada ${technician.name}. Instruksi: ${note || "-"}`,
         updatedBy: assignedBy,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
     }
     await ticket.save();
@@ -100,7 +104,10 @@ const getMyTasks = async (req, res, next) => {
     const technicianId = req.user._id;
 
     const tasks = await Assignment.find({ technicianId })
-      .populate("ticketId", "ticketId customerName category issueTitle status description")
+      .populate(
+        "ticketId",
+        "ticketId customerName category issueTitle status description",
+      )
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -124,7 +131,9 @@ const acceptTask = async (req, res, next) => {
 
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
-      return res.status(404).json({ success: false, message: "Surat tugas tidak ditemukan." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Surat tugas tidak ditemukan." });
     }
 
     if (assignment.technicianId.toString() !== technicianId.toString()) {
@@ -146,7 +155,7 @@ const acceptTask = async (req, res, next) => {
       note: "Surat tugas telah dikonfirmasi dan diterima oleh teknisi lapangan.",
       statusAtTime: "CONFIRMED",
       updatedBy: technicianId,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
     await assignment.save();
 
@@ -166,7 +175,8 @@ const acceptTask = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Perintah kerja berhasil diterima. Segera merapat ke lokasi gangguan.",
+      message:
+        "Perintah kerja berhasil diterima. Segera merapat ke lokasi gangguan.",
       data: assignment,
     });
   } catch (error) {
@@ -186,33 +196,38 @@ const getAssignmentById = async (req, res, next) => {
     const assignment = await Assignment.findById(assignmentId)
       .populate({
         path: "ticketId",
-        select: "ticketId customerName phoneNumber issueTitle description category status address createdAt statusHistory"
+        select:
+          "ticketId customerName phoneNumber issueTitle description category status address createdAt statusHistory",
       })
       .populate("assignedBy", "name role");
 
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: "Lembar surat penugasan tidak ditemukan dalam sistem."
+        message: "Lembar surat penugasan tidak ditemukan dalam sistem.",
       });
     }
 
-    if (req.user.role === "Technical" && assignment.technicianId.toString() !== req.user._id.toString()) {
+    if (
+      req.user.role === "Technical" &&
+      assignment.technicianId.toString() !== req.user._id.toString()
+    ) {
       return res.status(403).json({
         success: false,
-        message: "Aksi ditolak. Anda tidak memiliki hak akses untuk melihat lembar kerja teknisi lain."
+        message:
+          "Aksi ditolak. Anda tidak memiliki hak akses untuk melihat lembar kerja teknisi lain.",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: assignment
+      data: assignment,
     });
   } catch (error) {
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: "Format ID penugasan tidak valid."
+        message: "Format ID penugasan tidak valid.",
       });
     }
     next(error);
@@ -233,17 +248,25 @@ const updateAssignmentStatus = async (req, res, next) => {
     // 1. Validasi opsi input status
     const allowedStatus = ["On Site", "In Progress", "Resolved"];
     if (!allowedStatus.includes(status)) {
-      return res.status(400).json({ success: false, message: "Pembaruan status operasional lapangan tidak valid." });
+      return res.status(400).json({
+        success: false,
+        message: "Pembaruan status operasional lapangan tidak valid.",
+      });
     }
 
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
-      return res.status(404).json({ success: false, message: "Surat penugasan tidak ditemukan." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Surat penugasan tidak ditemukan." });
     }
 
     // Pastikan teknisi yang login adalah pemilik tugas ini
     if (assignment.technicianId.toString() !== technicianId.toString()) {
-      return res.status(403).json({ success: false, message: "Aksi ditolak. Anda tidak berwenang memperbarui tugas ini." });
+      return res.status(403).json({
+        success: false,
+        message: "Aksi ditolak. Anda tidak berwenang memperbarui tugas ini.",
+      });
     }
 
     // 2. Pemetaan log deskripsi teks & format status kapital untuk sinkronisasi tiket utama
@@ -251,13 +274,16 @@ const updateAssignmentStatus = async (req, res, next) => {
     let ticketStatusFormat = "";
 
     if (status === "On Site") {
-      noteText = "Teknisi lapangan telah tiba di titik lokasi alamat penanganan pelanggan.";
+      noteText =
+        "Teknisi lapangan telah tiba di titik lokasi alamat penanganan pelanggan.";
       ticketStatusFormat = "ON SITE";
     } else if (status === "In Progress") {
-      noteText = "Teknisi mulai mengeksekusi tindakan perbaikan fisik infrastruktur jaringan.";
+      noteText =
+        "Teknisi mulai mengeksekusi tindakan perbaikan fisik infrastruktur jaringan.";
       ticketStatusFormat = "IN PROGRESS";
     } else if (status === "Resolved") {
-      noteText = "Kendala gangguan berhasil diatasi oleh teknisi di lokasi. Menunggu penulisan laporan kerja akhir.";
+      noteText =
+        "Kendala gangguan berhasil diatasi oleh teknisi di lokasi. Menunggu penulisan laporan kerja akhir.";
       ticketStatusFormat = "RESOLVED";
     }
 
@@ -267,7 +293,7 @@ const updateAssignmentStatus = async (req, res, next) => {
       note: noteText,
       statusAtTime: ticketStatusFormat,
       updatedBy: technicianId,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
     await assignment.save();
 
@@ -280,7 +306,7 @@ const updateAssignmentStatus = async (req, res, next) => {
           status: ticketStatusFormat,
           note: noteText,
           updatedBy: technicianId,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
       }
       await ticket.save();
@@ -289,18 +315,13 @@ const updateAssignmentStatus = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: `Status tugas lapangan berhasil diperbarui menjadi ${status}.`,
-      data: assignment
+      data: assignment,
     });
   } catch (error) {
     next(error);
   }
 };
 
-/**
- * @desc    Mengirim lembar laporan kerja akhir teknisi (Submit Work Report) & Menutup Tiket
- * @route   POST /api/assignments/:id/report
- * @access  Private (Technical Only)
- */
 const submitWorkReport = async (req, res, next) => {
   try {
     const assignmentId = req.params.id;
@@ -308,48 +329,79 @@ const submitWorkReport = async (req, res, next) => {
     const technicianId = req.user._id;
 
     if (!solution || !finalNote) {
-      return res.status(400).json({ success: false, message: "Komponen tindakan solusi dan catatan akhir wajib diisi." });
+      return res.status(400).json({
+        success: false,
+        message: "Komponen tindakan solusi dan catatan akhir wajib diisi.",
+      });
     }
 
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
-      return res.status(404).json({ success: false, message: "Surat penugasan tidak ditemukan." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Surat penugasan tidak ditemukan." });
     }
 
     if (assignment.technicianId.toString() !== technicianId.toString()) {
-      return res.status(403).json({ success: false, message: "Aksi ditolak. Anda tidak berwenang menutup tugas ini." });
+      return res.status(403).json({
+        success: false,
+        message: "Aksi ditolak. Anda tidak berwenang menutup tugas ini.",
+      });
     }
 
-    // 1. Simpan lembar Work Report ke dalam objek model Assignment
     assignment.status = "Completed";
     assignment.workReport = {
       solution,
       finalNote,
       evidenceUrl: evidenceUrl || "",
-      submittedAt: new Date()
+      submittedAt: new Date(),
     };
     assignment.progressUpdates.push({
       note: `Laporan penutupan diunggah. Solusi: ${solution}.`,
       statusAtTime: "CLOSED",
       updatedBy: technicianId,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
     await assignment.save();
 
-    // 2. Tutup status berkas Ticket utama menjadi CLOSED dan catat riwayat final
     const ticket = await Ticket.findById(assignment.ticketId);
     if (ticket) {
       ticket.status = "CLOSED";
-      ticket.resolvedBy = technicianId; // Menyematkan teknisi sebagai resolver
+      ticket.resolvedBy = technicianId;
       if (ticket.statusHistory) {
         ticket.statusHistory.push({
           status: "CLOSED",
           note: `Tiket dinyatakan selesai & ditutup total. Tindakan: ${solution}. Catatan teknis: ${finalNote}`,
           updatedBy: technicianId,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
       }
       await ticket.save();
+
+      const technician = await User.findById(technicianId);
+      if (technician) {
+        technician.availabilityStatus = "Available";
+        await technician.save();
+      }
+
+      const namaTeknisi = technician?.name || "Teknisi Lapangan";
+
+      const pesanCustomer = `Halo *${ticket.customerName}*,\n\nKabar baik! Laporan kendala fisik Anda dengan ID *${ticket.ticketId}* (${ticket.issueTitle}) telah selesai dikerjakan secara langsung di lokasi oleh teknisi kami (*${namaTeknisi}*).\n\n*Tindakan Solusi:* \n_"${solution}"_\n\n*Catatan Akhir:* \n_"${finalNote}"_\n\nStatus Berkas: *CLOSED* (Selesai). Terima kasih atas kerja sama Anda selama proses perbaikan berlangsung.`;
+
+      WAService.sendNotification({
+        ticketId: ticket._id,
+        recipientName: ticket.customerName,
+        recipientRole: "Customer",
+        phoneNumber: ticket.phoneNumber,
+        messageType: "TICKET_CLOSED",
+        messageContent: pesanCustomer,
+        additionalOptions: {},
+      }).catch((waErr) => {
+        console.error(
+          "Gagal mengirimkan notifikasi WA penutupan tiket teknisi:",
+          waErr.message,
+        );
+      });
     }
 
     // 3. Kembalikan status ketersediaan user Teknisi dari "Busy" menjadi "Available"
@@ -361,8 +413,9 @@ const submitWorkReport = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Laporan kerja akhir berhasil diverifikasi, tiket ditutup, dan status ketersediaan Anda kembali Available.",
-      data: assignment
+      message:
+        "Laporan kerja akhir berhasil diverifikasi, tiket ditutup, dan status ketersediaan Anda kembali Available.",
+      data: assignment,
     });
   } catch (error) {
     next(error);
@@ -375,5 +428,5 @@ module.exports = {
   acceptTask,
   getAssignmentById,
   updateAssignmentStatus, // Modul baru pembaruan status
-  submitWorkReport         // Modul baru laporan penutupan tugas
+  submitWorkReport, // Modul baru laporan penutupan tugas
 };

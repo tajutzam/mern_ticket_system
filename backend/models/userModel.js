@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema(
       enum: ["Helpdesk", "NOC", "Technical", "Customer"],
       required: [true, "Role wajib ditentukan"],
     },
-    // Khusus untuk role 'Technical' (Langkah 8: Cek Availability)
     availabilityStatus: {
       type: String,
       enum: ["Available", "Busy"],

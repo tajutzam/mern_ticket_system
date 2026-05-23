@@ -315,7 +315,6 @@ function HistoryDetailModal({ assignmentId, ticketIdString }: { assignmentId: st
               </div>
             </div>
 
-            {/* LAPORAN AKHIR KERJA TEKNISI (CLOSING REPORT) */}
             <div className="border-t border-neutral-100 pt-3 space-y-3">
               <h4 className="font-extrabold text-neutral-900 text-[10px] uppercase tracking-wider flex items-center gap-1.5 text-neutral-800">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Hasil Akhir Penanganan Lapangan

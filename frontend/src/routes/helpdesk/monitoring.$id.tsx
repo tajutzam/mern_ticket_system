@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import {
   TicketSummary,
   ProgressTimeline,
-  WhatsAppLog,
 } from "@/components/TicketPanels";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+import { WhatsAppLog } from "@/components/WhatsAppLog";
 
 export const Route = createFileRoute("/helpdesk/monitoring/$id")({
   component: HelpdeskTicketDetail,

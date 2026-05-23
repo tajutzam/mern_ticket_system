@@ -18,6 +18,7 @@ import { Route as TrackerIdRouteImport } from './routes/tracker/$id'
 import { Route as TechnicalProfileRouteImport } from './routes/technical/profile'
 import { Route as NocTechniciansRouteImport } from './routes/noc/technicians'
 import { Route as NocProfileRouteImport } from './routes/noc/profile'
+import { Route as HelpdeskUsersRouteImport } from './routes/helpdesk/users'
 import { Route as HelpdeskProfileRouteImport } from './routes/helpdesk/profile'
 import { Route as HelpdeskCreateRouteImport } from './routes/helpdesk/create'
 import { Route as HelpdeskMonitoringIndexRouteImport } from './routes/helpdesk/monitoring.index'
@@ -72,6 +73,11 @@ const NocProfileRoute = NocProfileRouteImport.update({
   path: '/noc/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpdeskUsersRoute = HelpdeskUsersRouteImport.update({
+  id: '/helpdesk/users',
+  path: '/helpdesk/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HelpdeskProfileRoute = HelpdeskProfileRouteImport.update({
   id: '/helpdesk/profile',
   path: '/helpdesk/profile',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/helpdesk/create': typeof HelpdeskCreateRoute
   '/helpdesk/profile': typeof HelpdeskProfileRoute
+  '/helpdesk/users': typeof HelpdeskUsersRoute
   '/noc/profile': typeof NocProfileRoute
   '/noc/technicians': typeof NocTechniciansRoute
   '/technical/profile': typeof TechnicalProfileRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/helpdesk/create': typeof HelpdeskCreateRoute
   '/helpdesk/profile': typeof HelpdeskProfileRoute
+  '/helpdesk/users': typeof HelpdeskUsersRoute
   '/noc/profile': typeof NocProfileRoute
   '/noc/technicians': typeof NocTechniciansRoute
   '/technical/profile': typeof TechnicalProfileRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/helpdesk/create': typeof HelpdeskCreateRoute
   '/helpdesk/profile': typeof HelpdeskProfileRoute
+  '/helpdesk/users': typeof HelpdeskUsersRoute
   '/noc/profile': typeof NocProfileRoute
   '/noc/technicians': typeof NocTechniciansRoute
   '/technical/profile': typeof TechnicalProfileRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/helpdesk/create'
     | '/helpdesk/profile'
+    | '/helpdesk/users'
     | '/noc/profile'
     | '/noc/technicians'
     | '/technical/profile'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/helpdesk/create'
     | '/helpdesk/profile'
+    | '/helpdesk/users'
     | '/noc/profile'
     | '/noc/technicians'
     | '/technical/profile'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/helpdesk/create'
     | '/helpdesk/profile'
+    | '/helpdesk/users'
     | '/noc/profile'
     | '/noc/technicians'
     | '/technical/profile'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   HelpdeskCreateRoute: typeof HelpdeskCreateRoute
   HelpdeskProfileRoute: typeof HelpdeskProfileRoute
+  HelpdeskUsersRoute: typeof HelpdeskUsersRoute
   NocProfileRoute: typeof NocProfileRoute
   NocTechniciansRoute: typeof NocTechniciansRoute
   TechnicalProfileRoute: typeof TechnicalProfileRoute
@@ -317,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NocProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/helpdesk/users': {
+      id: '/helpdesk/users'
+      path: '/helpdesk/users'
+      fullPath: '/helpdesk/users'
+      preLoaderRoute: typeof HelpdeskUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/helpdesk/profile': {
       id: '/helpdesk/profile'
       path: '/helpdesk/profile'
@@ -381,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   HelpdeskCreateRoute: HelpdeskCreateRoute,
   HelpdeskProfileRoute: HelpdeskProfileRoute,
+  HelpdeskUsersRoute: HelpdeskUsersRoute,
   NocProfileRoute: NocProfileRoute,
   NocTechniciansRoute: NocTechniciansRoute,
   TechnicalProfileRoute: TechnicalProfileRoute,

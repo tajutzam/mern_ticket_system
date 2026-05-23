@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import {
   TicketSummary,
   ProgressTimeline,
-  WhatsAppLog,
 } from "@/components/TicketPanels";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +24,7 @@ import {
   useResolveTicketRemoteMutation, 
   useAssignTicketMutation 
 } from "@/hooks/api/useTicketMutations";
+import { WhatsAppLog } from "@/components/WhatsAppLog";
 
 export const Route = createFileRoute("/noc/tickets/$id")({
   component: NocDetail,

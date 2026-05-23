@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { type Role, useSipaten } from "@/lib/sipaten-store";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/hooks/api/useAuthMutations";
-import { useEffect } from "react"; 
+import { useEffect } from "react";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -14,7 +14,7 @@ import {
   Shield,
   Mail,
   Loader2,
-  Settings, 
+  Settings,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -26,7 +26,9 @@ const navByRole: Record<
     { to: "/helpdesk", label: "Dashboard Overview", icon: <LayoutDashboard className="h-4 w-4" /> },
     { to: "/helpdesk/create", label: "Create Ticket", icon: <PlusCircle className="h-4 w-4" /> },
     { to: "/helpdesk/monitoring", label: "Monitoring System", icon: <Ticket className="h-4 w-4" /> },
+    { to: "/helpdesk/users", label: "User Management", icon: <Users className="h-4 w-4" /> },
     { to: "/helpdesk/profile", label: "Setting Profile", icon: <Settings className="h-4 w-4" /> },
+
   ],
   noc: [
     { to: "/noc", label: "Metrics & Analysis", icon: <Activity className="h-4 w-4" /> },
@@ -85,16 +87,16 @@ export function AppLayout({
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-neutral-900 flex font-sans antialiased">
-      
+
       {/* ENTERPRISE SIDEBAR CONTAINER */}
       <aside className="w-64 border-r border-neutral-200/60 bg-white flex flex-col shrink-0">
-        
+
         {/* BRAND IDENTITY WITH LOGO.PNG */}
         <div className="h-16 px-6 border-b border-neutral-200/60 flex items-center gap-2.5 bg-white">
           <div className="h-8 w-8 overflow-hidden flex items-center justify-center rounded-lg select-none">
-            <img 
-              src="/logo.png" 
-              alt="Logo SIPATEN" 
+            <img
+              src="/logo.png"
+              alt="Logo SIPATEN"
               className="h-full w-auto object-contain"
             />
           </div>
@@ -151,11 +153,10 @@ export function AppLayout({
               <Link
                 key={n.to}
                 to={n.to}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold tracking-wide uppercase transition-all duration-200 ${
-                  active
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold tracking-wide uppercase transition-all duration-200 ${active
                     ? "bg-neutral-900 text-white shadow-sm"
                     : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900"
-                }`}
+                  }`}
               >
                 {/* Highlight warna ikon aktif disesuaikan menggunakan aksen warna brand #36a7e3 */}
                 <span className={`transition-colors ${active ? "text-white" : "text-neutral-400 group-hover:text-neutral-600"}`}>
@@ -193,7 +194,7 @@ export function AppLayout({
   );
 }
 
-{/* CLEAN SAAS FLAT BAR HEADER */}
+{/* CLEAN SAAS FLAT BAR HEADER */ }
 export function PageHeader({
   title,
   subtitle,

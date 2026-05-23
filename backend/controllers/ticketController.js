@@ -1,5 +1,6 @@
 const moment = require("moment/moment");
 const Ticket = require("../models/ticketModel");
+const WAService = require("../service/waService");
 
 exports.createTicket = async (req, res) => {
   try {
@@ -82,6 +83,18 @@ exports.confirmTicket = async (req, res) => {
 
     await ticket.save();
 
+    const pesanCustomer = `Halo *${ticket.customerName}*,\n\nLaporan kendala Anda dengan ID *${ticket.ticketId}* (${ticket.category}) telah dikonfirmasi oleh sistem *SIPATEN*.\n\nStatus saat ini: *CONFIRMED* (Siap dianalisis oleh tim NOC).\n\nTerima kasih atas kesabaran Anda.`;
+
+    await WAService.sendNotification({
+      ticketId: ticket._id,
+      recipientName: ticket.customerName,
+      recipientRole: "Customer",
+      phoneNumber: ticket.phoneNumber,
+      messageType: "TICKET_CONFIRMED",
+      messageContent: pesanCustomer,
+      additionalOptions: {},
+    });
+
     res.status(200).json({
       status: "success",
       message:
@@ -133,7 +146,8 @@ exports.deleteTicket = async (req, res) => {
 
 exports.updateTicket = async (req, res) => {
   try {
-    const { customerName, phoneNumber, issueTitle, description, category } = req.body;
+    const { customerName, phoneNumber, issueTitle, description, category } =
+      req.body;
 
     const ticket = await Ticket.findById(req.params.id);
 
@@ -159,7 +173,7 @@ exports.updateTicket = async (req, res) => {
     if (category) ticket.category = category;
 
     ticket.statusHistory.push({
-      status: ticket.status, 
+      status: ticket.status,
       updatedBy: req.user.id,
       note: "Data detail form tiket diperbarui oleh Helpdesk.",
     });
@@ -185,7 +199,7 @@ exports.getAllTickets = async (req, res) => {
     // 1. Ambil nilai page dan limit dari query, konversi ke tipe data Angka
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
-    
+
     // Hitung jumlah data yang harus dilewati (offset)
     const skip = (page - 1) * limit;
 
@@ -211,7 +225,7 @@ exports.getAllTickets = async (req, res) => {
         currentPage: page,
         limit: limit,
         hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
+        hasPrevPage: page > 1,
       },
       data: tickets,
     });
@@ -286,6 +300,29 @@ exports.resolveTicketRemote = async (req, res) => {
 
     await ticket.save();
 
+    // 2. TEMPLATE NOTIFIKASI WHATSAPP UNTUK CUSTOMER
+    const detailPenyelesaian =
+      note ||
+      "Perbaikan konfigurasi routing / remote restart port oleh tim NOC.";
+
+    const pesanCustomer = `Halo *${ticket.customerName}*,\n\nLaporan kendala Anda dengan ID *${ticket.ticketId}* (${ticket.issueTitle}) telah berhasil diselesaikan secara *REMOTE* oleh tim NOC kami.\n\n*Detail Solusi:* \n_"${detailPenyelesaian}"_\n\nTiket Anda kini telah berstatus *CLOSED* (Selesai). Terima kasih telah menggunakan layanan kami.`;
+
+    await WAService.sendNotification({
+      ticketId: ticket._id,
+      recipientName: ticket.customerName,
+      recipientRole: "Customer",
+      phoneNumber: ticket.phoneNumber,
+      messageType: "TICKET_CLOSED", 
+      messageContent: pesanCustomer,
+      additionalOptions: {
+       
+      },
+    }).catch((waErr) => {
+      console.error(
+        "Gagal memicu antrean background WA Service:",
+        waErr.message,
+      );
+    });
 
     res.status(200).json({
       status: "success",
@@ -302,42 +339,46 @@ exports.resolveTicketRemote = async (req, res) => {
   }
 };
 
-
 exports.getDashboardStats = async (req, res, next) => {
   try {
     const totalOpen = await Ticket.countDocuments({ status: "OPEN" });
-    const totalClosed = await Ticket.countDocuments({ status: { $in: ["CLOSED", "RESOLVED"] } });
-    const totalInProgress = await Ticket.countDocuments({ 
-      status: { $nin: ["OPEN", "CLOSED", "RESOLVED"] } // Memperbaiki typo di sini
+    const totalClosed = await Ticket.countDocuments({
+      status: { $in: ["CLOSED", "RESOLVED"] },
+    });
+    const totalInProgress = await Ticket.countDocuments({
+      status: { $nin: ["OPEN", "CLOSED", "RESOLVED"] }, // Memperbaiki typo di sini
     });
 
-    const last7Days = Array.from({ length: 7 }).map((_, i) =>
-      moment().subtract(i, "days").format("YYYY-MM-DD")
-    ).reverse();
+    const last7Days = Array.from({ length: 7 })
+      .map((_, i) => moment().subtract(i, "days").format("YYYY-MM-DD"))
+      .reverse();
 
     const startOfRange = moment(last7Days[0]).startOf("day").toDate();
     const endOfRange = moment(last7Days[6]).endOf("day").toDate();
 
     const allRecentTickets = await Ticket.find({
-      createdAt: { $gte: startOfRange, $lte: endOfRange }
+      createdAt: { $gte: startOfRange, $lte: endOfRange },
     });
 
     const timelineChart = [];
 
     for (const dateStr of last7Days) {
-      const dayTickets = allRecentTickets.filter(t => 
-        t.createdAt && moment(t.createdAt).format("YYYY-MM-DD") === dateStr
+      const dayTickets = allRecentTickets.filter(
+        (t) =>
+          t.createdAt && moment(t.createdAt).format("YYYY-MM-DD") === dateStr,
       );
 
-      const openCount = dayTickets.filter(t => t.status === "OPEN").length;
-      const closedCount = dayTickets.filter(t => ["CLOSED", "RESOLVED"].includes(t.status)).length;
+      const openCount = dayTickets.filter((t) => t.status === "OPEN").length;
+      const closedCount = dayTickets.filter((t) =>
+        ["CLOSED", "RESOLVED"].includes(t.status),
+      ).length;
       const progressCount = dayTickets.length - (openCount + closedCount);
 
       timelineChart.push({
         label: moment(dateStr).format("DD MMM"),
-        "Open": openCount,
+        Open: openCount,
         "In Progress": progressCount,
-        "Closed / Resolved": closedCount
+        "Closed / Resolved": closedCount,
       });
     }
 
@@ -348,45 +389,45 @@ exports.getDashboardStats = async (req, res, next) => {
           open: totalOpen,
           inProgress: totalInProgress,
           closed: totalClosed,
-          total: totalOpen + totalInProgress + totalClosed
+          total: totalOpen + totalInProgress + totalClosed,
         },
-        chartData: timelineChart
-      }
+        chartData: timelineChart,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Gagal memuat statistik dashboard.",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
 
 exports.trackTicketPublic = async (req, res, next) => {
   try {
     const { ticketId } = req.params;
 
-    const ticket = await Ticket.findOne({ ticketId:`#${ticketId}` })
+    const ticket = await Ticket.findOne({ ticketId: `#${ticketId}` })
       .populate("statusHistory.updatedBy", "name role")
       .populate("createdBy", "name role");
 
     if (!ticket) {
       return res.status(404).json({
         success: false,
-        message: "Nomor tiket tidak ditemukan dalam sistem kami. Periksa kembali penulisan ID Anda."
+        message:
+          "Nomor tiket tidak ditemukan dalam sistem kami. Periksa kembali penulisan ID Anda.",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: ticket
+      data: ticket,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Gagal memproses pelacakan tiket.",
-      error: error.message
+      error: error.message,
     });
   }
 };

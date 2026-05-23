@@ -1,29 +1,31 @@
 import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/api/axiosInstance";
 import { PageHeader } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/hooks/api/useAuthMutations";
 import { 
-  User, Mail, Shield, ShieldCheck, KeyRound, 
-  Loader2, Save, RefreshCw, Activity, Terminal 
+  User, Mail, ShieldCheck, KeyRound, 
+  Loader2, Save, RefreshCw 
 } from "lucide-react";
 import { toast } from "sonner";
-import moment from "moment";
 
 export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
+  const queryClient = useQueryClient();
   const { data: user, isLoading } = useCurrentUser();
   const userData = user?.user || user;
 
-  // State Form Data Diri
+  // State Form Data Personal
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   
   // State Form Keamanan
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
 
+  // Efek untuk mengisi data awal form setelah data user selesai dimuat
   useEffect(() => {
     if (userData) {
       setName(userData.name || "");
@@ -31,14 +33,46 @@ export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
     }
   }, [userData]);
 
+  // 1. Mutasi untuk Update Informasi Data Diri
+  const updateInfoMutation = useMutation({
+    mutationFn: async (updatedName: string) => {
+      const res = await api.put("/profile/info", { name: updatedName });
+      return res.data;
+    },
+    onSuccess: () => {
+      // Validasi ulang cache data user agar nama baru langsung ter-update di Sidebar / Layout
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      toast.success("Informasi profil data diri berhasil diperbarui.");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal memperbarui informasi personal.");
+    },
+  });
+
+  // 2. Mutasi untuk Perubahan Kata Sandi Akun
+  const changePasswordMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await api.put("/profile/change-password", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      // Bersihkan form sandi jika proses di backend berhasil tuntas
+      setCurrentPassword("");
+      setNewPassword("");
+      toast.success("Kata sandi akun berhasil diubah. Sesi Anda tetap aman.");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal memperbarui kata sandi.");
+    },
+  });
+
   const handleUpdateInfo = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
-    
-    setTimeout(() => {
-      setIsSaving(false);
-      toast.success("Informasi profil data diri berhasil diperbarui.");
-    }, 800);
+    if (!name.trim()) {
+      toast.error("Komponen nama lengkap wajib diisi.");
+      return;
+    }
+    updateInfoMutation.mutate(name);
   };
 
   const handleChangePassword = (e: React.FormEvent) => {
@@ -47,15 +81,19 @@ export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
       toast.error("Seluruh kolom verifikasi kata sandi wajib diisi.");
       return;
     }
-    setIsSaving(true);
+    if (newPassword.length < 6) {
+      toast.error("Kata sandi baru minimal harus 6 karakter.");
+      return;
+    }
 
-    setTimeout(() => {
-      setIsSaving(false);
-      setCurrentPassword("");
-      setNewPassword("");
-      toast.success("Kata sandi akun berhasil diubah. Sesi Anda tetap aman.");
-    }, 1000);
+    changePasswordMutation.mutate({
+      currentPassword,
+      newPassword,
+    });
   };
+
+  // State loading gabungan untuk menonaktifkan interaksi tombol form saat mutasi berjalan
+  const isPendingMutation = updateInfoMutation.isPending || changePasswordMutation.isPending;
 
   if (isLoading) {
     return (
@@ -91,7 +129,8 @@ export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
                   type="text" 
                   value={name} 
                   onChange={(e) => setName(e.target.value)}
-                  className="focus-visible:ring-neutral-950 border-neutral-300 text-xs font-medium"
+                  disabled={isPendingMutation}
+                  className="focus-visible:ring-neutral-950 border-neutral-300 text-xs font-medium h-10 rounded-xl"
                 />
               </div>
 
@@ -101,13 +140,21 @@ export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
                   type="email" 
                   value={email} 
                   disabled
-                  className="bg-neutral-50 border-neutral-200 text-xs font-medium text-neutral-400 cursor-not-allowed"
+                  className="bg-neutral-50 border-neutral-200 text-xs font-medium text-neutral-400 cursor-not-allowed h-10 rounded-xl"
                 />
               </div>
 
               <div className="sm:col-span-2 pt-2 flex justify-end">
-                <Button type="submit" disabled={isSaving} className="bg-neutral-900 text-white font-bold text-xs h-9 px-4">
-                  {isSaving ? <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                <Button 
+                  type="submit" 
+                  disabled={isPendingMutation} 
+                  className="bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-sm transition-all flex items-center"
+                >
+                  {updateInfoMutation.isPending ? (
+                    <RefreshCw className="h-3 w-3 animate-spin mr-1.5" />
+                  ) : (
+                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                  )}
                   Simpan Perubahan
                 </Button>
               </div>
@@ -129,7 +176,8 @@ export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
                     placeholder="••••••••"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="focus-visible:ring-neutral-950 border-neutral-300 text-xs font-medium"
+                    disabled={isPendingMutation}
+                    className="focus-visible:ring-neutral-950 border-neutral-300 text-xs font-medium h-10 rounded-xl"
                   />
                 </div>
 
@@ -137,16 +185,26 @@ export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
                   <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Kata Sandi Baru</label>
                   <Input 
                     type="password" 
-                    placeholder="Minimal 8 karakter"
+                    placeholder="Minimal 6 karakter"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="focus-visible:ring-neutral-950 border-neutral-300 text-xs font-medium"
+                    disabled={isPendingMutation}
+                    className="focus-visible:ring-neutral-950 border-neutral-300 text-xs font-medium h-10 rounded-xl"
                   />
                 </div>
               </div>
 
               <div className="pt-2 border-t border-neutral-100 flex justify-end">
-                <Button type="submit" disabled={isSaving} className="bg-neutral-900 text-white font-bold text-xs h-9 px-4">
+                <Button 
+                  type="submit" 
+                  disabled={isPendingMutation} 
+                  className="bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-sm transition-all flex items-center"
+                >
+                  {changePasswordMutation.isPending ? (
+                    <RefreshCw className="h-3 w-3 animate-spin mr-1.5" />
+                  ) : (
+                    <KeyRound className="h-3.5 w-3.5 mr-1.5" />
+                  )}
                   Perbarui Kata Sandi
                 </Button>
               </div>
@@ -154,6 +212,7 @@ export function GeneralProfile({ roleLabel }: { roleLabel: string }) {
           </Card>
         </div>
 
+        {/* SIDE BAR INFO TINGKAT HAK AKSES */}
         <div className="space-y-4">
           <Card className="p-5 border-neutral-200/60 bg-white rounded-xl shadow-sm space-y-4">
             <h3 className="text-xs font-black text-neutral-900 uppercase tracking-wider">Tingkat Hak Akses</h3>

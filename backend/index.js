@@ -24,6 +24,8 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/tickets', require('./routes/tiketRoutes'))
 app.use('/api/assignments', require('./routes/assignmentRoutes'))
+app.use('/api/wa-logs', require('./routes/waRouter'))
+app.use("/api/profile", require("./routes/profileRoutes"));
 
 
 app.get('/', (req, res) => {
